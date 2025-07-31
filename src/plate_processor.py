@@ -40,33 +40,48 @@ def convert_to_grayScale(target_img):
 def contrast_maximize(gray_plate):
     # 모폴로지 연산용 구조화 요소
     k = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
-    # 모폴로지 연산(tophat, blackhat)
-    tophat = cv2.morphologyEx(gray_plate, cv2.MORPH_TOPHAT, k)
-    blackhat = cv2.morphologyEx(gray_plate, cv2.MORPH_BLACKHAT, k)
+    # 모폴로지 연산
+    # tophat = cv2.morphologyEx(gray_plate, cv2.MORPH_TOPHAT, k)
+    # blackhat = cv2.morphologyEx(gray_plate, cv2.MORPH_BLACKHAT, k)
+
     # 대비 향상 적용
     # enhanced = cv2.add(gray_plate, tophat)
     # enhanced = cv2.subtract(gray_plate, blackhat)
     # enhanced = cv2.equalizeHist(enhanced)
-    enhanced = cv2.equalizeHist(gray_plate)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(2,1))
+    enhanced = clahe.apply(gray_plate)
+    gamma = 0.4  # 밝기 조정
+    enhanced = np.array(255 * (gray_plate / 255) ** gamma, dtype='uint8')
+    # enhanced = cv2.equalizeHist(gray_plate)
     # 결과 비교 시각화
     plt.figure(figsize=(15, 4))
 
-    plt.subplot(1, 4, 1)
+    plt.subplot(1, 2, 1)
     plt.imshow(gray_plate, cmap='gray')
     plt.title('Original Gray')
     plt.axis('off')
 
-    plt.subplot(1, 4, 2)
-    plt.imshow(tophat, cmap='gray')
-    plt.title('Top Hat')
-    plt.axis('off')
+    # plt.subplot(1, 4, 2)
+    # plt.imshow(tophat, cmap='gray')
+    # plt.title('Top Hat')
+    # plt.axis('off')
 
-    plt.subplot(1, 4, 3)
-    plt.imshow(blackhat, cmap='gray')
-    plt.title('Black Hat')
-    plt.axis('off')
+    # plt.subplot(1, 4, 3)
+    # plt.imshow(blackhat, cmap='gray')
+    # plt.title('Black Hat')
+    # plt.axis('off')
 
-    plt.subplot(1, 4, 4)
+    # plt.subplot(1, 4, 2)
+    # plt.imshow(opened, cmap='gray')
+    # plt.title('Open')
+    # plt.axis('off')
+
+    # plt.subplot(1, 4, 3)
+    # plt.imshow(closed, cmap='gray')
+    # plt.title('Close')
+    # plt.axis('off')
+
+    plt.subplot(1, 2, 2)
     plt.imshow(enhanced, cmap='gray')
     plt.title('Enhanced Contrast')
     plt.axis('off')
@@ -80,11 +95,15 @@ def contrast_maximize(gray_plate):
 def threshold_plate(enhanced_plate):
     blurred = cv2.GaussianBlur(enhanced_plate, (3,3), 0)
     thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    # 임계처리 후 노이즈 조정
+    k = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
+    #cv2.morphologyEx(blurred, cv2.MORPH_OPEN, k)
+    cv2.erode(blurred, k)
     return thresh
 
 # 윤곽선 처리
 def find_contour(thresh):
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # 결과 시각화용 이미지 생성
     height, width = thresh.shape
     contour_img = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
