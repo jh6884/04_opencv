@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import os
 
-img_name = 'car_02' # 이미지명
+img_name = 'car_05' # 이미지명
 
 win_name = "License Plate Extractor"
 img = cv2.imread(f'../img/{img_name}.jpg')
