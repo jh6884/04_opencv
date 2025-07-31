@@ -23,7 +23,7 @@ def convert_to_grayScale(target_img):
     plt.figure(figsize=(12, 4))
 
     plt.subplot(1, 2, 1)
-    plt.imshow(cv2.cvtColor(plate_img, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(target_img, cv2.COLOR_BGR2RGB))
     plt.title('Original Extracted Plate')
     plt.axis('off')
 
@@ -44,9 +44,10 @@ def contrast_maximize(gray_plate):
     tophat = cv2.morphologyEx(gray_plate, cv2.MORPH_TOPHAT, k)
     blackhat = cv2.morphologyEx(gray_plate, cv2.MORPH_BLACKHAT, k)
     # 대비 향상 적용
-    enhanced = cv2.add(gray_plate, tophat)
-    enhanced = cv2.subtract(gray_plate, blackhat)
-    enhanced = cv2.equalizeHist(enhanced)
+    # enhanced = cv2.add(gray_plate, tophat)
+    # enhanced = cv2.subtract(gray_plate, blackhat)
+    # enhanced = cv2.equalizeHist(enhanced)
+    enhanced = cv2.equalizeHist(gray_plate)
     # 결과 비교 시각화
     plt.figure(figsize=(15, 4))
 
@@ -78,7 +79,7 @@ def contrast_maximize(gray_plate):
 # 임계처리
 def threshold_plate(enhanced_plate):
     blurred = cv2.GaussianBlur(enhanced_plate, (3,3), 0)
-    thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 11, 2)
+    thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
     return thresh
 
 # 윤곽선 처리
@@ -204,7 +205,7 @@ def process_extracted_plates(plate_name):
     save_processed_results(plate_name, gray_plate, enhanced_plate, thresh_plate, contour_result)
 
     # 처리 결과 요약
-    potential_chars = prepare_for_next_step(contours, thresh_plate)
+    potential_chars = prepare_for_next_step(contours)
     print(f"처리 완료, 검출된 윤곽선 {len(contours)}개, 잠재적 글자 {potential_chars}개")
     return {
         'original': plate_img,
@@ -217,8 +218,6 @@ def process_extracted_plates(plate_name):
     }
 
 # 배치 처리
-# 배치 처리
-
 def batch_process_plates():
     plate_dir = '../extracted_plates'
 
@@ -243,3 +242,5 @@ def batch_process_plates():
     print(f"\n=== 전체 처리 완료: {len(results)}개 번호판 ===")
 
     return results
+
+batch_process_plates()
