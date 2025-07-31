@@ -95,11 +95,38 @@ def contrast_maximize(gray_plate):
 def threshold_plate(enhanced_plate):
     blurred = cv2.GaussianBlur(enhanced_plate, (3,3), 0)
     thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    _, thresh_otsu = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     # 임계처리 후 노이즈 조정
     k = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
     #cv2.morphologyEx(blurred, cv2.MORPH_OPEN, k)
     cv2.erode(blurred, k)
-    return thresh
+
+    plt.figure(figsize=(16, 4))
+
+    plt.subplot(1, 4, 1)
+    plt.imshow(enhanced_plate, cmap='gray')
+    plt.title('Enhanced Plate')
+    plt.axis('off')
+
+    plt.subplot(1, 4, 2)
+    plt.imshow(blurred, cmap='gray')
+    plt.title('Blurred')
+    plt.axis('off')
+
+    plt.subplot(1, 4, 3)
+    plt.imshow(thresh, cmap='gray')
+    plt.title('Adaptive Threshold')
+    plt.axis('off')
+
+    plt.subplot(1, 4, 4)
+    plt.imshow(thresh_otsu, cmap='gray')
+    plt.title('Otsu Threshold')
+    plt.axis('off')
+
+    plt.tight_layout()
+    plt.show()
+
+    return thresh, thresh_otsu
 
 # 윤곽선 처리
 def find_contour(thresh):
@@ -180,7 +207,7 @@ def prepare_for_next_step(contours):
     potential_chars = 0
     for contour in contours:
         area = cv2.contourArea(contour)
-        if 30 < area < 2000:  # 글자 크기 범위 추정
+        if 1000 < area < 2000:  # 글자 크기 범위 추정
             potential_chars += 1
     print(f"잠재적 글자 후보: {potential_chars}개")
 
@@ -215,7 +242,7 @@ def process_extracted_plates(plate_name):
     enhanced_plate = contrast_maximize(gray_plate)
 
     # 임계처리
-    thresh_plate = threshold_plate(enhanced_plate)
+    thresh_adaptive, thresh_plate = threshold_plate(enhanced_plate)
 
     # 윤곽선 검출
     contours, contour_result = find_contour(thresh_plate)
