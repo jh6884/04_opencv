@@ -50,7 +50,7 @@ def onMouse(event, x, y, flags, param): # 마우스 이벤트 콜백 함수
 
             # 변환된 이미지 저장
             existing_files = len(os.listdir('../extracted_plates'))
-            file_name = f'../extracted_plates/plate_{existing_files+1:02d}.jpg'
+            file_name = f'../extracted_plates/plate_{existing_files+1:02d}.png'
             save = cv2.imwrite(file_name, result)
             if save:
                 print('File saved! Press any key to exit program')
